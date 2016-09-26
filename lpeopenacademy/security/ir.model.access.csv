@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_lpeopenacademy_course,lpeopenacademy.course,model_lpeopenacademy_course,,1,0,0,0
+access_lpeopenacademy_session,lpeopenacademy.session,model_lpeopenacademy_session,,1,0,0,0

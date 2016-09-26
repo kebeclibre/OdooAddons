@@ -1,0 +1,173 @@
+<openerp>
+  <data>
+    <!-- explicit list view definition -->
+    <!-- Courses     -->
+    <record model="ir.ui.view" id="lpeopenacademy.course_list">
+      <field name="name">lpeopenacademy course list</field>
+      <field name="model">lpeopenacademy.course</field>
+      <field name="arch" type="xml">
+        <tree name="courseList">
+          <field name="name"/>
+          <field name="description"/>
+          <field name="responsible_id"/>
+        </tree>
+      </field>
+    </record>
+
+
+        <record model="ir.ui.view" id="lpeopenacademy.course_form">
+      <field name="name">lpeopenacademy course form</field>
+      <field name="model">lpeopenacademy.course</field>
+      <field name="arch" type="xml">
+        <form string="courseForm">
+          <sheet>
+            <group>
+          <field name="name"/>
+          <field name="description"/>
+          <field name="responsible_id"/>
+          <field name="session_ids"/>
+            </group>
+          </sheet>
+        </form>
+      </field>
+    </record>
+
+    <!-- Sessions -->
+        <record model="ir.ui.view" id="lpeopenacademy.session_list">
+      <field name="name">lpeopenacademy Session list</field>
+      <field name="model">lpeopenacademy.session</field>
+      <field name="arch" type="xml">
+        <tree name="sessionList">
+          <field name="name"/>
+          <field name="seats"/>
+          <field name="occupied_seats" widget="progressbar"/>
+        </tree>
+      </field>
+    </record>
+
+    <record model="ir.ui.view" id="session_calendar_view">
+            <field name="name">session.calendar</field>
+            <field name="model">lpeopenacademy.session</field>
+            <field name="arch" type="xml">
+                <calendar string="Session Calendar" date_start="start_date"
+                          date_stop="end_date"
+                          color="course_id">
+                    <field name="name"/>
+                    <field name="occupied_seats" widget="progressbar"/>
+                </calendar>
+            </field>
+        </record>
+
+
+        <record model="ir.ui.view" id="view_openacademy_session_kanban">
+            <field name="name">lpeopenacademy.session.kanban</field>
+            <field name="model">lpeopenacademy.session</field>
+            <field name="arch" type="xml">
+                <kanban default_group_by="course_id">
+                    <field name="color"/>
+                    <templates>
+                        <t t-name="kanban-box">
+                            <div
+                                    t-attf-class="oe_kanban_color_{{kanban_getcolor(record.color.raw_value)}}
+                                                  oe_kanban_global_click_edit oe_semantic_html_override
+                                                  oe_kanban_card {{record.group_fancy==1 ? 'oe_kanban_card_fancy' : ''}}">
+                                <div class="oe_dropdown_kanban">
+                                    <!-- dropdown menu -->
+                                    <div class="oe_dropdown_toggle">
+                                        <i class="fa fa-bars fa-lg"/>
+                                        <ul class="oe_dropdown_menu">
+                                            <li>
+                                                <a type="delete">Delete</a>
+                                            </li>
+                                            <li>
+                                                <ul class="oe_kanban_colorpicker"
+                                                    data-field="color"/>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="oe_clear"></div>
+                                </div>
+                                <div t-attf-class="oe_kanban_content">
+                                    <!-- title -->
+                                    Session name:
+                                    <field name="name"/>
+                                    <br/>
+                                    Start date:
+                                    <field name="start_date"/>
+                                    <br/>
+                                    duration:
+                                    <field name="duration"/>
+                                </div>
+                            </div>
+                        </t>
+                    </templates>
+                </kanban>
+            </field>
+        </record>
+
+
+
+
+    <!-- FORM FOR SESSION IS AUTO CREATED BU FRAMEWORK -->
+    
+
+
+    <!-- actions opening views on models -->
+    
+    <record model="ir.actions.act_window" id="lpeopenacademy.action_window_courses">
+      <field name="name">lpeopenacademy courses</field>
+      <field name="res_model">lpeopenacademy.course</field>
+      <field name="view_mode">tree,form</field>
+      <field name="help" type="html">
+        <p class="oe_view_nocontent_create">Create the first course
+                </p>
+          </field>
+    </record>
+
+        <record model="ir.actions.act_window" id="lpeopenacademy.action_window_sessions">
+      <field name="name">lpeopenacademy sessions</field>
+      <field name="res_model">lpeopenacademy.session</field>
+      <field name="view_mode">tree,form,calendar,kanban</field>
+      <field name="help" type="html">
+        <p class="oe_view_nocontent_create">Create the first session
+                </p>
+          </field>
+    </record>
+    
+
+    <!-- server action to the one above -->
+    
+    <record model="ir.actions.server" id="lpeopenacademy.action_server">
+      <field name="name">lpeopenacademy server</field>
+      <field name="model_id" ref="model_lpeopenacademy_course"/>
+      <field name="code">
+        action = {
+          "type": "ir.actions.act_window",
+          "view_mode": "tree,form",
+          "res_model": self._name,
+        }
+      </field>
+    </record>
+
+    
+
+    <!-- Top menu item -->
+    
+    <menuitem name="lpeopenacademy" id="lpeopenacademy.menu_root"/>
+    
+    <!-- menu categories -->
+    
+    <menuitem name="Courses" id="lpeopenacademy.menu_courses" parent="lpeopenacademy.menu_root"/>
+    <menuitem name="Sessions" id="lpeopenacademy.menu_sessions" parent="lpeopenacademy.menu_root"/>
+    
+    <!-- actions -->
+    
+    <menuitem name="List Courses" id="lpeopenacademy.menu_courses_list" parent="lpeopenacademy.menu_courses"
+              action="lpeopenacademy.action_window_courses"/>
+    <menuitem name="List Sessions" id="lpeopenacademy.menu_session_list" parent="lpeopenacademy.menu_sessions"
+              action="lpeopenacademy.action_window_sessions"/>
+<!--     <menuitem name="Calendar Sessions" id="lpeopenacademy.menu_session_calendar" parent="lpeopenacademy.menu_sessions"
+              action="lpeopenacademy.action_window_calendar_session"/> -->
+    
+  </data>
+</openerp>
