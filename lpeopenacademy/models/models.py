@@ -22,9 +22,10 @@ import random
 
 class Session(models.Model):
     _name = 'lpeopenacademy.session'
+    _inherit = ['mail.thread']
 
-    course_id = fields.Many2one('lpeopenacademy.course', ondelete='cascade', string='Course', required="True")
-    participant_ids = fields.Many2many('res.partner', String='Participants')
+    
+    participant_ids = fields.Many2many('res.partner', string='Participants')
     start_date = fields.Date(default=fields.Date.today)
     duration = fields.Float(digits=(6, 2), help="Duration in days")
     #duration = fields.Float(compute='_compute_duration', inverse="_compute_end_date", digits=(6, 2), help="Duration in days")
@@ -37,7 +38,32 @@ class Session(models.Model):
 
     name = fields.Char(compute='_compute_name', string='Session name', store="True")
 
-    @api.depends('course_id')
+    # def _read_group_course_id(self, cr, uid, ids, domain, read_group_order=None, access_rights_uid=None, context=None):
+    #     course_obj = self.pool.get('lpeopenacademy.course')
+    #     course_ids = course_obj._search(cr, uid, domain, access_rights_uid=access_rights_uid, context=context)
+    #     # import pdb;pdb.set_trace()
+    #     #courses = self.pool.get('lpeopenacademy.course').name_get(cr, access_rights_uid, context=context)
+    #     courses = course_obj.name_get(cr, access_rights_uid, course_ids, context=context)
+    #     #courses = self.env['lpeopenacademy.course'].search([]).name_get()
+    #     fold = {}
+    #     for c_id in course_ids:
+    #         fold[c_id] = True
+    #     return courses, fold
+
+    @api.multi
+    def _read_group_course_id(self,domain, read_group_order=None, access_rights_uid=None):
+        courses = self.env['lpeopenacademy.course'].search([]).name_get()
+        return courses, None
+
+    _group_by_full = {
+    #'course_id': _read_group_course_id
+    'course_id' : _read_group_course_id,
+    }
+
+    course_id = fields.Many2one('lpeopenacademy.course', ondelete='cascade', string='Course', required="True")
+
+
+    @api.depends('course_id')   
     def _compute_name(self):
         for r in self:
             if r.course_id:
@@ -47,9 +73,9 @@ class Session(models.Model):
             r.name = str(random.randint(1, 1e6)) + '_' + append
 
     @api.depends('seats', 'participant_ids')
-        def _compute_available(self):
-            for r in self:
-                r.available_seats = r.seats - len(r.participant_ids)
+    def _compute_available(self):
+        for r in self:
+            r.available_seats = r.seats - len(r.participant_ids)
 
     @api.depends('seats', 'participant_ids')
     def _compute_occupied(self):
@@ -77,6 +103,21 @@ class Session(models.Model):
             start_date = fields.Datetime.from_string(r.start_date)
             end_date = fields.Datetime.from_string(r.end_date)
             r.duration = (end_date - start_date).days + 1
+
+    @api.onchange('participant_ids')
+    def _on_change_participant_ids(self):
+        for r in self:
+            followers = r.message_follower_ids.mapped('partner_id')
+            participants = r.participant_ids
+            r.message_subscribe(self, partner_ids=participants-followers)
+            r.message_unsubscribe(self, partner_ids=followers-participants)
+
+            # if diff in participants:
+            #     r.message_subscribe(self, partner_ids=diff)
+            # else:
+            #   lowers - part)
+
+
 
 
 class Course(models.Model):
